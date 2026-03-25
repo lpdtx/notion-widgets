@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Tasks</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #ffffff;
+    --surface: #f5f5f5;
+    --border:  #e4e4e4;
+    --text:    #111111;
+    --text-2:  #555555;
+    --text-3:  #aaaaaa;
+    --red:     #ef4444;
+    --amber:   #f59e0b;
+    --radius:  7px;
+    --font:    'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 24px 20px 36px;
+    max-width: 640px;
+  }
+
+  /* HEADER */
+  .hd {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .hd-title { font-size: 13px; font-weight: 600; }
+  .hd-date  { font-size: 11px; color: var(--text-3); }
+
+  /* PROGRESS */
+  .prog-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .prog-track {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .prog-fill {
+    height: 100%;
+    background: var(--text);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+  .prog-pct {
+    font-size: 11px;
+    color: var(--text-3);
+    min-width: 28px;
+    text-align: right;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 11px;
+    border-radius: 20px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-3);
+    cursor: pointer;
+    transition: all 0.12s;
+    user-select: none;
+  }
+  .tab:hover { background: var(--surface); color: var(--text-2); }
+  .tab.active { background: var(--text); color: #fff; }
+
+  /* ADD ROW */
+  .add-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 22px;
+    align-items: center;
+  }
+  .add-input {
+    flex: 1;
+    height: 34px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0 11px;
+    font-family: var(--font);
+    font-size: 12.5px;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.12s;
+  }
+  .add-input::placeholder { color: var(--text-3); }
+  .add-input:focus { border-color: #bbb; }
+
+  .sel {
+    height: 34px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0 8px;
+    font-family: var(--font);
+    font-size: 11px;
+    color: var(--text-2);
+    background: var(--bg);
+    outline: none;
+    cursor: pointer;
+  }
+  .sel-cat { min-width: 105px; }
+  .sel-pri { min-width: 82px; }
+
+  .add-btn {
+    height: 34px;
+    padding: 0 16px;
+    background: var(--text);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.12s;
+  }
+  .add-btn:hover { opacity: 0.72; }
+
+  /* SECTION LABEL */
+  .sec-lbl {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    padding: 14px 0 5px 2px;
+  }
+
+  /* TASK */
+  .task-list { display: flex; flex-direction: column; gap: 1px; }
+
+  .task {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 8px 8px 8px 10px;
+    border-radius: 6px;
+    transition: background 0.1s;
+  }
+  .task:hover { background: var(--surface); }
+  .task:hover .t-del { opacity: 1; }
+  .task.done { opacity: 0.35; }
+  .task.done .t-text { text-decoration: line-through; }
+
+  /* priority dot */
+  .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+  .d-h { background: var(--red); }
+  .d-m { background: var(--amber); }
+  .d-l { background: var(--border); }
+
+  /* checkbox */
+  .cb {
+    width: 15px; height: 15px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s;
+    background: var(--bg);
+  }
+  .task.done .cb { background: var(--text); border-color: var(--text); }
+  .cb::after {
+    content: '';
+    width: 4px; height: 7px;
+    border: 1.5px solid #fff;
+    border-top: none; border-left: none;
+    transform: rotate(45deg) translateY(-1px);
+    opacity: 0;
+  }
+  .task.done .cb::after { opacity: 1; }
+
+  .t-body { flex: 1; min-width: 0; cursor: pointer; }
+  .t-text { font-size: 12.5px; color: var(--text); line-height: 1.45; font-weight: 400; }
+  .t-sub  { font-size: 10.5px; color: var(--text-3); margin-top: 2px; }
+
+  .t-del {
+    background: none;
+    border: none;
+    color: var(--text-3);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.1s, color 0.1s;
+    flex-shrink: 0;
+    line-height: 1;
+    margin-top: 2px;
+  }
+  .t-del:hover { color: var(--red); }
+
+  /* EMPTY */
+  .empty {
+    padding: 28px 0;
+    text-align: center;
+    color: var(--text-3);
+    font-size: 12px;
+  }
+
+  /* DONE TOGGLE */
+  .done-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    cursor: pointer;
+    color: var(--text-3);
+    font-size: 11px;
+    font-weight: 500;
+    user-select: none;
+    transition: color 0.12s;
+  }
+  .done-row:hover { color: var(--text-2); }
+  .chev { font-size: 8px; transition: transform 0.18s; display: inline-block; }
+  .done-row.open .chev { transform: rotate(90deg); }
+
+  #doneWrap { margin-top: 6px; }
+
+  select option { background: #fff; }
+
+  @keyframes up {
+    from { opacity: 0; transform: translateY(3px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .task { animation: up 0.14s ease both; }
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <span class="hd-title">Today</span>
+  <span class="hd-date" id="hDate"></span>
+</div>
+
+<div class="prog-row">
+  <div class="prog-track"><div class="prog-fill" id="pFill" style="width:0%"></div></div>
+  <div class="prog-pct" id="pPct">0%</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="setF(this,'all')">All</div>
+  <div class="tab" onclick="setF(this,'deals')">Deals</div>
+  <div class="tab" onclick="setF(this,'team')">Team</div>
+  <div class="tab" onclick="setF(this,'build')">Build</div>
+  <div class="tab" onclick="setF(this,'admin')">Admin</div>
+  <div class="tab" onclick="setF(this,'personal')">Personal</div>
+</div>
+
+<div class="add-row">
+  <input class="add-input" id="nT" placeholder="Add a task…" onkeydown="if(event.key==='Enter')add()">
+  <select class="sel sel-cat" id="nC">
+    <option value="deals">Deals</option>
+    <option value="team">Team</option>
+    <option value="build">Build</option>
+    <option value="admin">Admin</option>
+    <option value="personal">Personal</option>
+  </select>
+  <select class="sel sel-pri" id="nP">
+    <option value="high">High</option>
+    <option value="medium" selected>Medium</option>
+    <option value="low">Low</option>
+  </select>
+  <button class="add-btn" onclick="add()">Add</button>
+</div>
+
+<div id="wrap"></div>
+
+<div class="done-row" id="dRow" onclick="toggleDone(this)">
+  <span class="chev">▶</span>
+  <span id="dLbl">Completed (0)</span>
+</div>
+<div id="doneWrap" style="display:none"></div>
+
+<script>
+const KEY = 'dtasks_v1', DKEY = 'dtasks_day';
+const CATS = { deals:'Deals', team:'Team', build:'Build', admin:'Admin', personal:'Personal' };
+const CORD = ['deals','team','build','admin','personal'];
+const PRI  = { high:0, medium:1, low:2 };
+
+let tasks=[], f='all', showD=false;
+
+function load() {
+  try { tasks = JSON.parse(localStorage.getItem(KEY))||[]; } catch { tasks=[]; }
+  if(!tasks.length) seed();
+}
+function save() { try{localStorage.setItem(KEY,JSON.stringify(tasks));}catch{} }
+
+function rollover() {
+  const today = new Date().toDateString();
+  const last = localStorage.getItem(DKEY);
+  if(last && last!==today){ tasks=tasks.filter(t=>!t.done); save(); }
+  localStorage.setItem(DKEY,today);
+}
+
+function seed() {
+  const D=[
+    {text:'Bent Tree Lofts — confirm info received',          cat:'deals',   pri:'high'},
+    {text:'American Landmark — launch prep (2 weeks out)',    cat:'deals',   pri:'medium'},
+    {text:'The Preserve — circulate updated OM to Greystar',  cat:'deals',   pri:'high', done:true},
+    {text:'Willow & Wise — send rep agreement',               cat:'deals',   pri:'medium'},
+    {text:'Aura Southgate + Melissa Ranch — send extensions', cat:'deals',   pri:'medium'},
+    {text:'RW — PIP recap: send written summary',             cat:'team',    pri:'high'},
+    {text:'Submit JW bonuses (Leftbank, Dane Park, Alvera, Greenville)', cat:'admin', pri:'medium'},
+    {text:'APEX — get JSON files into Deal Room',             cat:'build',   pri:'medium'},
+    {text:'CoWork Dispatch — set up on old laptop',           cat:'build',   pri:'low'},
+  ];
+  tasks=D.map((d,i)=>({id:Date.now()+i,done:false,...d}));
+  save();
+}
+
+function add() {
+  const el=document.getElementById('nT');
+  const txt=el.value.trim(); if(!txt)return;
+  tasks.unshift({id:Date.now(),text:txt,cat:document.getElementById('nC').value,pri:document.getElementById('nP').value,done:false});
+  el.value=''; save(); render();
+}
+
+function toggle(id){ const t=tasks.find(t=>t.id===id); if(t){t.done=!t.done;save();render();} }
+function del(id,e){ e.stopPropagation(); tasks=tasks.filter(t=>t.id!==id); save();render(); }
+function setF(el,v){ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); f=v; render(); }
+function toggleDone(row){ showD=!showD; row.classList.toggle('open',showD); document.getElementById('doneWrap').style.display=showD?'block':'none'; }
+
+function render() {
+  const d=new Date();
+  const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const MOS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('hDate').textContent=`${DAYS[d.getDay()]}, ${MOS[d.getMonth()]} ${d.getDate()}`;
+
+  const total=tasks.length, doneN=tasks.filter(t=>t.done).length;
+  const pct=total?Math.round(doneN/total*100):0;
+  document.getElementById('pFill').style.width=pct+'%';
+  document.getElementById('pPct').textContent=pct+'%';
+  document.getElementById('dLbl').textContent=`Completed (${doneN})`;
+
+  const active=tasks.filter(t=>!t.done&&(f==='all'||t.cat===f));
+  const wrap=document.getElementById('wrap');
+  wrap.innerHTML='';
+
+  if(!active.length) {
+    wrap.innerHTML='<div class="empty">All clear.</div>';
+  } else if(f==='all') {
+    CORD.forEach(cat=>{
+      const g=active.filter(t=>t.cat===cat).sort((a,b)=>PRI[a.pri]-PRI[b.pri]);
+      if(!g.length)return;
+      const lbl=document.createElement('div'); lbl.className='sec-lbl'; lbl.textContent=CATS[cat];
+      wrap.appendChild(lbl);
+      const ul=document.createElement('div'); ul.className='task-list';
+      g.forEach(t=>ul.appendChild(mk(t))); wrap.appendChild(ul);
+    });
+  } else {
+    const ul=document.createElement('div'); ul.className='task-list';
+    active.sort((a,b)=>PRI[a.pri]-PRI[b.pri]).forEach(t=>ul.appendChild(mk(t)));
+    wrap.appendChild(ul);
+  }
+
+  const done=tasks.filter(t=>t.done&&(f==='all'||t.cat===f));
+  const dw=document.getElementById('doneWrap'); dw.innerHTML='';
+  if(done.length){ const ul=document.createElement('div'); ul.className='task-list'; done.forEach(t=>ul.appendChild(mk(t))); dw.appendChild(ul); }
+}
+
+function mk(t) {
+  const el=document.createElement('div');
+  el.className='task'+(t.done?' done':'');
+  const dc={high:'d-h',medium:'d-m',low:'d-l'}[t.pri];
+  el.innerHTML=`
+    <div class="dot ${dc}"></div>
+    <div class="cb" onclick="toggle(${t.id})"></div>
+    <div class="t-body" onclick="toggle(${t.id})">
+      <div class="t-text">${esc(t.text)}</div>
+      <div class="t-sub">${CATS[t.cat]||t.cat}</div>
+    </div>
+    <button class="t-del" onclick="del(${t.id},event)">✕</button>`;
+  return el;
+}
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+load(); rollover(); render();
+</script>
+</body>
+</html>
